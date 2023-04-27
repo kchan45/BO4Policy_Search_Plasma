@@ -36,7 +36,7 @@ from ax.modelbridge.registry import Models
 from ax.modelbridge.factory import get_MOO_EHVI
 from ax.modelbridge.modelbridge_utils import observed_hypervolume
 # import custom packages
-from config.multistage import get_prob_info_exp
+from config.multistage import get_prob_info
 from config.reference_signal import myRef_CEM
 from KCutils.controller import MultiStageMPC
 from KCutils.simulation import Simulation
