@@ -295,8 +295,7 @@ ax.step(np.arange(len_list[1]-1)*ts, sim_data1['Usim'][1,:(st1-1)]+uss[1], label
 ax.set_xlabel('Time (s)')
 ax.set_ylabel('Flow Rate (SLM)')
 plt.draw()
-plt.show()
-quit()
+
 if dnn_sensitivity_analysis:
     # create directories for saving files
     os.makedirs(f'./sensitivity/{date}', exist_ok=True)
@@ -735,3 +734,7 @@ if continue_with_bo in ['Y', 'y']:
 else:
     print('Did not perform Bayesian optimization.')
 plt.show()
+
+print('\n-------------------------------------------------')
+print('Completed Simulations!')
+print('-------------------------------------------------\n')

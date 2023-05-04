@@ -1,12 +1,18 @@
+**NOTE: The documentation for this code is currently under revision, and the code may be simplified for a general audience. This repository will be finalized by the presentation date of this work: June 2, 2023.**
+
 **NOTE: This code is provided to reproduce the results obtained in the following paper: .**
 
 # Source Code
 This is considered the main working directory to run the code of this project.
 The main file to run **simulation-based** studies is `run_sim.py`, and the file(s) to reproduce Fig. xx and Fig. xx is/are `plot_xx.py` and `plot_xx.py`.
 The main file to run **real-time experimental** studies is `run_exp.py`.
-`run_exp.py` only works when connected to the Mesbah Lab APPJ. The main file to run the **global sensitivity analysis**
+`run_exp.py` only works when connected to the Mesbah Lab APPJ. The main file to run the **global sensitivity analysis** is also `run_sim.py` but with the following change to the code (Line 68):
+```
+dnn_sensitivity_analysis = True
+sensitivity_option = 'first-last' # select one from ['all', 'half', 'first-last']
+```
 
-Each of the main files above have been written to have the capability to run separate components of this work by modification of particular settings, particularly so for the real-time experimental trials.
+Each of the main files above have been written to have the capability to run separate components of this work by modification of particular settings, particularly so for the real-time experimental trials (see files for more details).
 
 ## Folder Descriptions
 This section briefly describes the purpose of each of the *folders* nested within this directory.
