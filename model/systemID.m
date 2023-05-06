@@ -22,10 +22,6 @@ clear; close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % USER INPUTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% filename = '../src/ExperimentalData/2022_09_22_12h41m02s/OL_data_0_inputOutputData.csv';
-% filename = '../src/ExperimentalData/2022_09_22_15h28m28s/OL_data_0_inputOutputData.csv';
-% filename = '../src/ExperimentalData/2022_09_22_16h31m31s/OL_data_0_inputOutputData.csv';
-% filename = '../src/ExperimentalData/2022_09_22_16h59m13s/OL_data_0_inputOutputData.csv';
 filename = '../src/ExperimentalData/2022_09_22_17h28m06s/OL_data_0_inputOutputData.csv';
 
 filedate = '2022_09_22_17h28m06s';%filename(3:22);
