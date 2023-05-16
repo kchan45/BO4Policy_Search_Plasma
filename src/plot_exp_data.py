@@ -1,4 +1,24 @@
-# This file plots data obtained from experimental runs on the APPJ
+'''
+script to plot the data gethered by running run_exp.py. This script will plot
+a variety of figures for the data. In its unmodified state, it will plot Fig. 3
+and Fig. 4 of the cited paper as well as the trajectories of the experimental
+data stored in the published results. Modifications to the settings of this code
+may be done to achieve different visualizations of the data.
+THIS SCRIPT WORKS FOR EXPERIMENTAL TRIALS ONLY
+
+Requirements:
+* Python 3
+* Matplotlib [https://matplotlib.org] (for data visualization)
+* PyTorch [https://pytorch.org]
+* Ax [https://ax.dev]
+
+Copyright (c) 2023 Mesbah Lab. All Rights Reserved.
+
+Author(s): Kimberly J. Chan
+
+This file is under the MIT License. A copy of this license is included in the
+download of the entire code package (within the root folder of the package).
+'''
 
 import sys
 sys.dont_write_bytecode = True
@@ -6,7 +26,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.cm import ScalarMappable
 import matplotlib
-import os
 
 import KCutils.plot_utils as pu
 from config.multistage import get_prob_info_exp
@@ -16,6 +35,7 @@ plot_bo = True
 plot_mean = False
 plot_individual_trial_pareto = False
 plot_hypervolume = True
+save_figs = False
 
 model_file = '../model/APPJmodel_2022_09_22_17h28m06s.mat' # filename of identified model for plasma jet (to be used in controller)
 ts = 0.5
@@ -61,10 +81,17 @@ u_max = prob_info2['u_max']
 
 if plot_compare:
     fig_objs = {}
-    # plot smpc run
-    folder = '2022_09_22_21h33m53s'
+    # plot dnn run (with mismatch)
+    folder = '2022_09_23_11h33m59s'
     for exp_num in range(Nrep):
         filename = root+folder+f'/Backup/Experiment_{exp_num}.npy'
+
+        fig_objs = pu.plot_data_from_file(filename, prob_info2, CEM=True, fig_objs=fig_objs, label='dnn (with mismatch)')
+
+    # plot smpc run
+    folder = '2022_09_22_21h33m53s'
+    for exp_num in range(9):
+        filename = root+folder+f'/Backup/Experiment_{exp_num+2}.npy'
 
         fig_objs = pu.plot_data_from_file(filename, prob_info, CEM=True, fig_objs=fig_objs, label='smpc')
 
@@ -75,16 +102,7 @@ if plot_compare:
 
         fig_objs = pu.plot_data_from_file(filename, prob_info, CEM=True, fig_objs=fig_objs, label='dnn (no mismatch)')
 
-
-    # plot dnn run (with mismatch)
-    folder = '2022_09_23_11h33m59s'
-    for exp_num in range(Nrep):
-        filename = root+folder+f'/Backup/Experiment_{exp_num}.npy'
-
-        fig_objs = pu.plot_data_from_file(filename, prob_info2, CEM=True, fig_objs=fig_objs, label='dnn (with mismatch)')
-
     plt.show()
-
 
 import torch
 from ax.storage.json_store.load import load_experiment
@@ -115,9 +133,12 @@ opt_config = MultiObjectiveOptimizationConfig(objective=mo, objective_thresholds
 
 if plot_bo:
     folder = '2022_09_23_13h58m20s'
-    # folder = '2022_09_23_15h25m22s'
-    # folder = '2022_09_23_15h49m21s'
-    # folder = '2022_09_23_16h20m09s'
+
+    import os
+    fig_save_folder = f'./saved/{folder}-results/'
+    if not os.path.exists(fig_save_folder):
+        os.makedirs(fig_save_folder, exist_ok=True)
+
     n_mc = 1
     n_iter = 15+1
     iters_to_plot = list(range(0,n_iter,1))
@@ -193,7 +214,8 @@ if plot_bo:
         ax11.legend(loc='lower right', fontsize='small')
         plt.tight_layout()
         plt.draw()
-        fig.savefig(f'./saved/{folder}-results/{folder}_observed_treatments_up2iter{i}.png')
+        if save_figs:
+            fig.savefig(f'./saved/{folder}-results/{folder}_observed_treatments_up2iter{i}.png')
 
     if not plot_individual_trial_pareto:
         fig = plt.figure(figsize=(8,8),dpi=300)
@@ -222,14 +244,15 @@ if plot_bo:
 
         if plot_individual_trial_pareto:
             fig.canvas.draw_idle()
-            fig.savefig(f'./saved/{date}-results/{date}_observed_pareto_front_trial{n}.png')
+            if save_figs:
+                fig.savefig(f'./saved/{date}-results/{date}_observed_pareto_front_trial{n}.png')
         elif n == n_mc-1:
             ax.set_xlabel('Dose Delivery Measure')
             ax.set_ylabel('Temperature Constraint Measure')
             # ax.set_xlim([50,100])
             fig.canvas.draw_idle()
-            fig.savefig(f'./saved/{date}-results/{date}_observed_pareto_front_all.png')
-            print('saved figure')
+            if save_figs:
+                fig.savefig(f'./saved/{date}-results/{date}_observed_pareto_front_all.png')
 
         hv_trace = ax_client.get_trace(experiment=ax_client.experiment)#, optimization_config=opt_config)
         hv_all.append(hv_trace)
@@ -399,11 +422,13 @@ if plot_bo:
 
         plt.tight_layout()
         fig2.canvas.draw_idle()
-        fig2.savefig(f'./saved/{date}-results/{date}_trajectories_stats_nste{n_ste}_trial{n}.png')
+        if save_figs:
+            fig2.savefig(f'./saved/{date}-results/{date}_trajectories_stats_nste{n_ste}_trial{n}.png')
 
         ax5.axhline(x_max[0]+xssp[0], color='r', linestyle='--', label='Constraint')
         fig5.canvas.draw_idle()
-        fig5.savefig(f'./saved/{date}-results/{date}_temp_zoom_stats_nste{n_ste}_trial{n}.png')
+        if save_figs:
+            fig5.savefig(f'./saved/{date}-results/{date}_temp_zoom_stats_nste{n_ste}_trial{n}.png')
 
         fig3 = plt.figure(figsize=(5,4),dpi=300)
         ax2 = fig3.add_subplot(111)
@@ -419,7 +444,8 @@ if plot_bo:
         # ax2.set_xlim([40,120])
         plt.tight_layout()
         fig3.canvas.draw_idle()
-        fig3.savefig(f'./saved/{date}-results/{date}_observed_pareto_front_trial{n}_up2iter{i}.png')
+        if save_figs:
+            fig3.savefig(f'./saved/{date}-results/{date}_observed_pareto_front_trial{n}_up2iter{i}.png')
 
     if plot_hypervolume:
         hvs = np.vstack(hv_all)
@@ -440,7 +466,8 @@ if plot_bo:
         ax.set_ylabel('Hypervolume')
         fig4.canvas.draw_idle()
         plt.tight_layout()
-        fig4.savefig(f'./saved/{date}-results/{date}_hypervolume.png')
+        if save_figs:
+            fig4.savefig(f'./saved/{date}-results/{date}_hypervolume.png')
 
 
     plt.show()

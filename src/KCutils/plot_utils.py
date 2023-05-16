@@ -1,4 +1,4 @@
-# plotting utility functions
+# custom plotting utility functions
 #
 # This file defines several functions that act as plotting utilities for
 # experimental data.
@@ -112,14 +112,14 @@ def plot_data_from_dict(exp_data, prob_info, open_loop=False, CEM=False, fig_obj
             u_min = prob_info['u_min']
 
             Refdata = np.ravel(exp_data['Yrefsim'])
-            CEM = np.ravel(exp_data['CEMsim'])
+            CEMdata = np.ravel(exp_data['CEMsim'])
             st = exp_data['CEM_stop_time']
             ctime = exp_data['ctime'][:st]
             Tdata = exp_data['Tsave']
             print('Total Runtime: ', np.sum(ctime))
             print('Average Runtime: ', np.mean(ctime))
 
-            CEMplot = CEM[:st+1]
+            CEMplot = CEMdata[:st+1]
             Refplot = Refdata[:st+1]
             Tplot = Tdata[:st+1]
 
@@ -129,14 +129,18 @@ def plot_data_from_dict(exp_data, prob_info, open_loop=False, CEM=False, fig_obj
             fig = fig_objs['fig']
             (ax11, ax12, ax21, ax22) = fig_objs['axes']
 
-            ax11.plot(np.arange(len(CEMplot))*ts, CEMplot, ':', label=label)
+            if label in ['smpc']:
+                ax11.plot(np.arange(len(CEMplot))*ts, CEMplot, ':', color='gray')
+                ax12.plot(np.arange(len(Tplot))*ts, Tplot, '--', color='gray')
+                ax21.step(np.arange(st-1)*ts, exp_data['Psave'][:(st-1)], color='gray')
+                ax22.step(np.arange(st-1)*ts, exp_data['qSave'][:(st-1)], color='gray')
+            else:
+                ax11.plot(np.arange(len(CEMplot))*ts, CEMplot, ':', label=label)
+                ax12.plot(np.arange(len(Tplot))*ts, Tplot, '--', label=label)
+                ax21.step(np.arange(st-1)*ts, exp_data['Psave'][:(st-1)], label=label)
+                ax22.step(np.arange(st-1)*ts, exp_data['qSave'][:(st-1)], label=label)
 
-            ax12.plot(np.arange(len(Tplot))*ts, Tplot, '--', label=label)
-
-            ax21.step(np.arange(st-1)*ts, exp_data['Psave'][:(st-1)], label=label)
-
-            ax22.step(np.arange(st-1)*ts, exp_data['qSave'][:(st-1)], label=label)
-
+            ax11.legend()
             plt.draw()
 
             fig_objs['fig'] = fig

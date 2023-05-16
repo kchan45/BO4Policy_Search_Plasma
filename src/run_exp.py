@@ -92,7 +92,7 @@ Nrep = 1 # number of replicates to repeat the experiment
 population_K = 0.5 # assumed "population" value for K
 patient_K = 0.55 # individiual patient value for K
 population_Tmax = 45.0 # assumed "population" temperature constraint
-patient_Tmax = 43.0 # individual patient temperature constraint
+patient_Tmax = 44.5 # individual patient temperature constraint
 
 ## options related to the policy approximation by DNN
 collect_trn_data = False # option to collect closed-loop data for training the policy (True to collect training data; False otherwise)
