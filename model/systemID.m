@@ -22,9 +22,12 @@ clear; close all;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % USER INPUTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% open loop data gathered for simulation studies
+filename = './2021_06_08_15h57m55s_dataCollectionOL.csv';
+% open loop data gathered for experimental studies
 filename = '../src/ExperimentalData/2022_09_22_17h28m06s/OL_data_0_inputOutputData.csv';
 
-filedate = '2022_09_22_17h28m06s';%filename(3:22);
+filedate = '2022_09_22_17h28m06s';%'2021_06_08_15h57m55s';
 data_direction = 0; % 0 for column-wise data, 1 for row-wise data
 y_idxs = [1,2]; % row/column indices in the data file corresponding to the output data
 u_idxs = [3,4]; % row/column indices in the data file corresponding to the input data
@@ -43,7 +46,7 @@ filter_temp = 0;
 T_col = 1;
 I_col = 2; % column/row in which the intensity data is located, leave as
 % empty if not specified
-I_norm_factor = 0.5e5; % intensity normalization factor
+I_norm_factor = 0.5e5;%0.75e5 % intensity normalization factor
 plot_fit = 1; % 1 for yes, 0 for no; plot a comparison of the data
 % and identified model
 center_data = 1; % 1 for yes, 0 for no
@@ -54,7 +57,7 @@ est_function = 'n4sid'; % choose 'ssest' or 'n4sid'
 validate_sys = 0;   % option to validate data (1 for yes, 0 for no)
 valid_split = 0.25;  % validation split, i.e. how much of the data to reserve for validation
 
-saveModel = 1; % 1 for yes, 0 for no
+saveModel = 0; % 1 for yes, 0 for no
 % specify an output file name, otherwise a default is used; please include
 % '.mat' in your filename
 % out_filename = 'APPJmodel_2021_06_08_15h57m55s_n4sid_50split.mat';
