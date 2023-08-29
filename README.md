@@ -3,9 +3,21 @@ Contribution to the American Control Conference (ACC) 2023:
 
 *Towards Personalized Plasma Medicine via Data-efficient Adaptation of Fast Deep Learning-based MPC Policies*
 
-[DOI]()*to be added when available*
+[DOI](https://doi.org/10.23919/ACC55779.2023.10156650)
 
 Authors: Kimberly J. Chan, Georgios Makrygiorgos, and Ali Mesbah
+
+If you use our work, please cite:
+```tex
+@inproceedings{chan2023towards,
+  title={Towards Personalized Plasma Medicine via Data-Efficient Adaptation of Fast Deep Learning-based {MPC} Policies},
+  author={Chan, Kimberly J and Makrygiorgos, Georgios and Mesbah, Ali},
+  booktitle={2023 American Control Conference (ACC)},
+  pages={2769--2775},
+  year={2023},
+  organization={IEEE}
+}
+```
 
 ## Implementation
 To run this code on your own device, it is recommended to work within a virtual environment. You may create your own virtual environment and then install the required Python packages by using the command
