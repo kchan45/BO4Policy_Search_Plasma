@@ -20,6 +20,8 @@ from numpy.random import default_rng
 import torch
 from torch import nn
 import torch.optim as optim
+import scipy.io as io
+import os
 
 import KCutils.pytorch_utils as ptu
 
@@ -44,7 +46,7 @@ class DNN():
         self.outputs = None
         self.train_method = None
 
-    def get_training_data_open_loop(self, c, Nsamp=300):
+    def get_training_data_open_loop(self, c, Nsamp=300, mpc_type='multistage'):
 
         # extract relevant problem information
         nx = c.prob_info['nx']
@@ -53,10 +55,10 @@ class DNN():
         x_min = c.prob_info['x_min'].reshape(-1,1)
         x_max = c.prob_info['x_max'].reshape(-1,1)
         rand_seed = c.prob_info['rand_seed']
-        if mpc_type == 'multistage' or mpc_type == 'economic':
+        if self.mpc_type == 'multistage' or self.mpc_type == 'economic':
             myref = c.prob_info['myref']
             cem_ref = myref(0)
-            if mpc_type == 'multistage':
+            if self.mpc_type == 'multistage':
                 Wset = c.prob_info['Wset']
 
         # create a random number generator (RNG); use the same seed for
@@ -385,142 +387,144 @@ class DNN():
 
         return self.model
 
-    def train_neural_network_matlab(self, H, L, activation="poslin"):
-        import matlab
-        import matlab.engine # matlab engine import
-        # start/connect to matlab engine
-        # eng = matlab.start_matlab() # start new matlab engine
-        # eng = matlab.connect_matlab() # connect to existing matlab engine
-        future = matlab.engine.start_matlab(background=True)
-        eng = future.result()
+    # def train_neural_network_matlab(self, H, L, activation="poslin"):
+    #     import matlab
+    #     import matlab.engine # matlab engine import
+    #     # start/connect to matlab engine
+    #     # eng = matlab.start_matlab() # start new matlab engine
+    #     # eng = matlab.connect_matlab() # connect to existing matlab engine
+    #     future = matlab.engine.start_matlab(background=True)
+    #     eng = future.result()
 
-        data_in = matlab.double(self.inputs.tolist())
-        data_out = matlab.double(self.outputs.tolist())
-        Wm, bm = eng.trainDNN(data_in, data_out, self.H, self.L, activation, nargout=2)
+    #     data_in = matlab.double(self.inputs.tolist())
+    #     data_out = matlab.double(self.outputs.tolist())
+    #     Wm, bm = eng.trainDNN(data_in, data_out, self.H, self.L, activation, nargout=2)
 
-        W = [np.asarray(a) for a in Wm]
-        b = [np.asarray(a) for a in bm]
-        # print(W)
-        # print(b)
-        self.W = W
-        self.b = b
-        self.train_method = 'matlab'
+    #     W = [np.asarray(a) for a in Wm]
+    #     b = [np.asarray(a) for a in bm]
+    #     # print(W)
+    #     # print(b)
+    #     self.W = W
+    #     self.b = b
+    #     self.train_method = 'matlab'
 
-    def hyperparameter_BO_matlab(self, H_max=None, L_max=None):
-        import matlab
-        import matlab.engine # matlab engine import
-        # start/connect to matlab engine
-        # eng = matlab.start_matlab() # start new matlab engine
-        # eng = matlab.connect_matlab() # connect to existing matlab engine
-        future = matlab.engine.start_matlab(background=True)
-        eng = future.result()
+    # def hyperparameter_BO_matlab(self, H_max=None, L_max=None):
+    #     import matlab
+    #     import matlab.engine # matlab engine import
+    #     # start/connect to matlab engine
+    #     # eng = matlab.start_matlab() # start new matlab engine
+    #     # eng = matlab.connect_matlab() # connect to existing matlab engine
+    #     future = matlab.engine.start_matlab(background=True)
+    #     eng = future.result()
 
-        if H_max is None:
-            H_max = self.H
-        if L_max is None:
-            L_max = self.L
+    #     if H_max is None:
+    #         H_max = self.H
+    #     if L_max is None:
+    #         L_max = self.L
 
-        data_in = matlab.double(self.inputs.tolist())
-        data_out = matlab.double(self.outputs.tolist())
-        bestH, bestL = eng.hpBO(data_in, data_out, H_max, L_max, nargout=2)
-        self.H = int(bestH)
-        self.L = int(bestL)
-        print('Optimal number of NODES: ', self.H)
-        print('Optimal number of LAYERS: ', self.L)
-        return self.H, self.L
+    #     data_in = matlab.double(self.inputs.tolist())
+    #     data_out = matlab.double(self.outputs.tolist())
+    #     bestH, bestL = eng.hpBO(data_in, data_out, H_max, L_max, nargout=2)
+    #     self.H = int(bestH)
+    #     self.L = int(bestL)
+    #     print('Optimal number of NODES: ', self.H)
+    #     print('Optimal number of LAYERS: ', self.L)
+    #     return self.H, self.L
 
-    def build_neural_network_keras(self, H, L, activation="relu", inputs=None, outputs=None):
-        import tensorflow as tf
-        from tensorflow import keras
-        from tensorflow.keras import layers
+    # def build_neural_network_keras(self, H, L, activation="relu", inputs=None, outputs=None):
+    #     import tensorflow as tf
+    #     from tensorflow import keras
+    #     from tensorflow.keras import layers
 
-        if self.inputs is None:
-            if inputs is None:
-                error('No input data found in this object, and no input data was passed into this method. Please run the train_neural_network_keras() method to generate training data or pass in input data!')
-            else:
-                self.inputs = inputs
-        if self.outputs is None:
-            if outputs is None:
-                error('No output data found in this object, and no output data was passed into this method. Please run the train_neural_network_keras() method to generate training data or pass in output data!')
-            else:
-                self.outputs = outputs
+    #     if self.inputs is None:
+    #         if inputs is None:
+    #             print('No input data found in this object, and no input data was passed into this method. Please run the train_neural_network_keras() method to generate training data or pass in input data!')
+    #             raise
+    #         else:
+    #             self.inputs = inputs
+    #     if self.outputs is None:
+    #         if outputs is None:
+    #             print('No output data found in this object, and no output data was passed into this method. Please run the train_neural_network_keras() method to generate training data or pass in output data!')
+    #             raise
+    #         else:
+    #             self.outputs = outputs
 
-        self.H = H
-        self.L = L
+    #     self.H = H
+    #     self.L = L
 
-        # build keras model of DNN
-        model = keras.Sequential()
-        # specify initializers for semi-consistent training/fitting
-        model.add(layers.InputLayer(input_shape=self.n_in))
+    #     # build keras model of DNN
+    #     model = keras.Sequential()
+    #     # specify initializers for semi-consistent training/fitting
+    #     model.add(layers.InputLayer(input_shape=self.n_in))
 
-        # hidden layers
-        for i in range(self.L):
-            model.add(layers.Dense(self.H, activation=activation,
-                                    name='hidden_layer'+str(i)))
+    #     # hidden layers
+    #     for i in range(self.L):
+    #         model.add(layers.Dense(self.H, activation=activation,
+    #                                 name='hidden_layer'+str(i)))
 
-        # output layer
-        model.add(layers.Dense(self.n_out, activation='linear',
-                                name='output_layer'))
+    #     # output layer
+    #     model.add(layers.Dense(self.n_out, activation='linear',
+    #                             name='output_layer'))
 
-        optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
-        # compile model
-        model.compile(
-            optimizer = optimizer,
-            loss = tf.keras.losses.MeanSquaredError(),
-            metrics = ['accuracy'],
-        )
+    #     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
+    #     # compile model
+    #     model.compile(
+    #         optimizer = optimizer,
+    #         loss = tf.keras.losses.MeanSquaredError(),
+    #         metrics = ['accuracy'],
+    #     )
 
-        self.model = model
-        return model
+    #     self.model = model
+    #     return model
 
-    def train_neural_network_keras(self, fit_params={'epochs':5000, 'batch_size':32, 'validation_split':0.3}, verbose=1, cbs=True):
-        import tensorflow as tf
-        from tensorflow import keras
-        from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+    # def train_neural_network_keras(self, fit_params={'epochs':5000, 'batch_size':32, 'validation_split':0.3}, verbose=1, cbs=True):
+    #     import tensorflow as tf
+    #     from tensorflow import keras
+    #     from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
-        model = self.model
+    #     model = self.model
 
-        if cbs:
-            es = EarlyStopping(
-                    monitor='val_loss',
-                    mode='min',
-                    verbose=verbose,
-                    patience=5)
+    #     if cbs:
+    #         es = EarlyStopping(
+    #                 monitor='val_loss',
+    #                 mode='min',
+    #                 verbose=verbose,
+    #                 patience=5)
 
-            tmp_save_file = 'saved/best_model.h5'
-            mc = ModelCheckpoint(tmp_save_file, monitor='val_loss',
-                                 mode='min', verbose=verbose, save_best_only=True)
+    #         tmp_save_file = 'saved/best_model.h5'
+    #         mc = ModelCheckpoint(tmp_save_file, monitor='val_loss',
+    #                              mode='min', verbose=verbose, save_best_only=True)
 
-            # fit model
-            history = model.fit(self.inputs.T, self.outputs.T,
-                                **fit_params, callbacks=[es, mc], verbose=verbose)
+    #         # fit model
+    #         history = model.fit(self.inputs.T, self.outputs.T,
+    #                             **fit_params, callbacks=[es, mc], verbose=verbose)
 
-            # # plot training history
-            # import matplotlib.pyplot as plt
-            # plt.figure()
-            # plt.plot(history.history['accuracy'], label='train')
-            # plt.plot(history.history['val_accuracy'], label='validation')
-            # plt.legend()
-            # plt.xlabel('Epoch')
-            # plt.ylabel('Accuracy')
-            # plt.show()
+    #         # # plot training history
+    #         # import matplotlib.pyplot as plt
+    #         # plt.figure()
+    #         # plt.plot(history.history['accuracy'], label='train')
+    #         # plt.plot(history.history['val_accuracy'], label='validation')
+    #         # plt.legend()
+    #         # plt.xlabel('Epoch')
+    #         # plt.ylabel('Accuracy')
+    #         # plt.show()
 
-            model = keras.models.load_model('saved/best_model.h5')
-            if verbose == 1:
-                model.summary()
-                model.evaluate(self.inputs.T, self.outputs.T)
-        else:
-            model.fit(self.inputs.T, self.outputs.T,
-                        **fit_params, verbose=verbose)
+    #         model = keras.models.load_model('saved/best_model.h5')
+    #         if verbose == 1:
+    #             model.summary()
+    #             model.evaluate(self.inputs.T, self.outputs.T)
+    #     else:
+    #         model.fit(self.inputs.T, self.outputs.T,
+    #                     **fit_params, verbose=verbose)
 
-        self.model = model
+    #     self.model = model
 
-        # get weights from model
-        weights = self.model.get_weights()
-        self.W = weights[::2]
-        self.b = weights[1::2]
-        self.train_method = 'keras'
-        return model
+    #     # get weights from model
+    #     weights = self.model.get_weights()
+    #     self.W = weights[::2]
+    #     self.b = weights[1::2]
+    #     self.train_method = 'keras'
+    #     return model
 
     def create_casadi_model(self):
         """
@@ -547,7 +551,8 @@ class DNN():
                 z = cas.fmax(cas.mtimes(self.W[i],z) + self.b[i],0)
             z = cas.mtimes(self.W[-1],z) + self.b[-1]
         else:
-            error('No Neural Network was trained. Please run one of the training methods before creating the CasADi Function version.')
+            print('No Neural Network was trained. Please run one of the training methods before creating the CasADi Function version.')
+            raise
 
         us = (z+1)/2*out_range + self.output_min
 
@@ -556,26 +561,26 @@ class DNN():
         self.netca = netca
         return netca
 
-    def clear_model_keras(self):
-        from tensorflow.keras import backend as K
-        from tensorflow.python.framework import ops
+    # def clear_model_keras(self):
+    #     from tensorflow.keras import backend as K
+    #     from tensorflow.python.framework import ops
 
-        del self.model
-        # clear keras session
-        K.clear_session()
-        ops.reset_default_graph()
+    #     del self.model
+    #     # clear keras session
+    #     K.clear_session()
+    #     ops.reset_default_graph()
 
-    def load_saved_model_keras(self, save_loc):
-        from tensorflow import keras
-        self.model = keras.models.load_model(save_loc)
-        # get weights from model
-        weights = self.model.get_weights()
-        self.W = weights[::2]
-        self.b = weights[1::2]
-        self.L = len(self.W)-1
-        self.H = self.W[1].shape[0]
-        self.train_method = 'keras'
-        self.create_casadi_model()
+    # def load_saved_model_keras(self, save_loc):
+    #     from tensorflow import keras
+    #     self.model = keras.models.load_model(save_loc)
+    #     # get weights from model
+    #     weights = self.model.get_weights()
+    #     self.W = weights[::2]
+    #     self.b = weights[1::2]
+    #     self.L = len(self.W)-1
+    #     self.H = self.W[1].shape[0]
+    #     self.train_method = 'keras'
+    #     self.create_casadi_model()
 
 class SimpleDNN():
     """
@@ -629,7 +634,8 @@ class SimpleDNN():
                 z = cas.fmax(cas.mtimes(self.W[i],z) + self.b[i],0)
             z = cas.mtimes(self.W[-1],z) + self.b[-1]
         else:
-            error('No Neural Network was trained. Please run one of the training methods before creating the CasADi Function version.')
+            print('No Neural Network was trained. Please run one of the training methods before creating the CasADi Function version.')
+            raise
 
         us = (z+1)/2*out_range + self.output_min
 
@@ -749,7 +755,10 @@ class SimpleDNN():
         W_sizes = [W.size for W in self.W]
         W_cumsum = np.cumsum(W_sizes)
 
-        if n < n_in*self.H + (self.L-1)*H**2 + self.H*n_out:
+        b_sizes = [b.size for b in self.b]
+        b_cumsum = np.cumsum(b_sizes)
+
+        if n < n_in*self.H + (self.L-1)*self.H**2 + self.H*n_out:
             W_idx = 0
             for i in W_cumsum:
                 if i > n:

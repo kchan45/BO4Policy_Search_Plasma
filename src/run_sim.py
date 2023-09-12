@@ -37,7 +37,6 @@ from ax.modelbridge.factory import get_MOO_EHVI
 from ax.modelbridge.modelbridge_utils import observed_hypervolume
 # import custom packages
 from config.multistage import get_prob_info
-from config.reference_signal import myRef_CEM
 from KCutils.controller import MultiStageMPC
 from KCutils.simulation import Simulation
 from KCutils.neural_network import DNN, SimpleDNN
@@ -121,7 +120,7 @@ tkwargs = {
 date = datetime.now().strftime('%Y_%m_%d_%H'+'h%M'+'m%S'+'s')
 
 # get problem information. Problem information is loaded from the
-# KCutils.multistage file. This file provides problem-specific information, which
+# config.multistage file. This file provides problem-specific information, which
 # may include system size and bounds, functions for evaluating the physical
 # system, controller parameters, etc.
 prob_info = get_prob_info(Kcem=population_K, Tmax=population_Tmax)
@@ -361,7 +360,7 @@ if dnn_sensitivity_analysis:
                 Tobj = np.sum((T[T>Tmax] - Tmax)**2)
                 s = {}
                 s['sim_data'] = sim_data
-                s['params'] = [Wn, bn]
+                # s['params'] = [Wn, bn]
                 s['obj_val'] = {'CEMobj': CEMobj, 'Tobj': Tobj}
                 d[f'rep{i}'] = s
                 obj1s[i] = CEMobj
